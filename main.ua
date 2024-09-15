@@ -34,6 +34,7 @@ Argmin ← ⊢⊚=/↧⊸♭
 # ? binary pattern, energy map
 
 # Phase 1 - make dither array (ordered binary pattern)
+&p"Phase 1"
 ⧻⊸⊚
 ⊃(
   ⋅⊙∘
@@ -50,21 +51,33 @@ Argmin ← ⊢⊚=/↧⊸♭
 # ? binary pattern, energy map, dither array, index
 
 # Phase 2 - fill voids until 50% full
+&p"Phase 2"
 -⊙(⌊÷2N) ⧻⊸⊚ # iteration count
 ⍜⊙(÷⊙1¬)⍥(
   Argmin ◡×
-  ⊃(⍜⊡⋅∞|+Energy ⊙⋅∘|⍜⊡⋅∘ ⊙⋅⋅⊙⟜(+1))
+  ⊃(
+    ⍜⊡⋅∞
+  | +Energy ⊙⋅∘
+  | ⍜⊡⋅∘ ⊙⋅⋅⊙⟜(+1)
+  )
 )
 # ? binary pattern, energy map, dither array, index
 
 # Phase 3 -  fill all clusters of zeroes
+&p"Phase 3"
 ⊃(
   -⊙N⧻⊚     # iteration count
 | ⟜EMap⊙◌ ¬ # flip binary pattern
 )
-
 ⋅⋅⊙(°1= +1N) ⍥(
   Argmax ◡×
-  ⊃(⍜⊡⋅0|-Energy ⊙⋅∘|⍜⊡⋅∘ ⊙⋅⋅⊙⟜(+1))
+  ⊃(
+    ⍜⊡⋅0
+  | -Energy ⊙⋅∘
+  | ⍜⊡⋅∘ ⊙⋅⋅⊙⟜(+1)
+  )
 )
 ÷N-1
+
+&p"Writing"
+&fwa $"./_x_.png"°⊟Dim img "png"
