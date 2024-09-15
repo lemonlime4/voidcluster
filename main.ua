@@ -1,70 +1,70 @@
-# uiua 0.12.3
+# Experimental!
 Dim ← 128_128
 Sigma ← 1.9
+Initial ← 0.1
 
-Divisor ← ××2.Sigma
-ELUT ← ≡≡(
-  /+ⁿ2-⌵-⟜:÷2Dim # toroidal distance
-  ⁿ:e¯÷Divisor   # gaussian
-) ⇡Dim
+N ← /×Dim
 
-# generate energy table at pixel
-Energy ← ↻:ELUT¯
-Up ← ⍜⊙⍉▽⟜▽
+# Energy map of single pixel
+Energy ← ↻¯⊙comptime(
+  °⍉⇡Dim
+  /+×.-⌵⤚-÷2Dim  # toroidal distance
+  ⁿ⊙e¯÷×2×.Sigma # gaussian
+)
 
-# prototype binary pattern and its energy
-<0.1∵⋅⚂.↯Dim0
-∧(+Energy)⟜(&p⧻)⊚⟜:
+# Build energy map
+EMap ← ×√N◌°ℂ⍜(
+  ⍉fft⍉fft
+| ×comptime(⍉fft⍉fft Energy 0_0)
+)
 
-# spread out binary pattern points
-⍥(
-  ⊢⊚=/↥♭.×,,
-  ⊃(-Energy ⊙∘|⍜⊡⋅0 ⊙⋅∘)
-  ⊢⊚=/↧♭.. # ⊢⊚=/↧♭.×⊙⟨1|∞⟩,,
-  ⊃(+Energy ⊙∘|⍜⊡⋅1 ⊙⋅∘)
+Argmax ← ⊢⊚=/↥⊸♭
+Argmin ← ⊢⊚=/↧⊸♭
+
+# initial binary pattern
+<Initial∵⋅⚂°△Dim
+⊃(∘|÷⊙1¬|EMap)
+⊙◌⍥(
+  ◡(Argmax ×⊙◌)
+  ⊃(⍜⊡⋅0|⍜⊡⋅1 ⊙⋅∘|-Energy ⊙⋅⋅∘)
+  ◡(Argmin ×⋅∘)
+  ⊃(⍜⊡⋅1|⍜⊡⋅∞ ⊙⋅∘|+Energy ⊙⋅⋅∘)
 )∞
-⊙⟜(&p⧻⊚)
 
-# phase 1 - order the binary pattern
-&p"Phase 1"
-:⊙(⧻⊚.)            # number of ones
-⊃(⊙⊙∘|↯Dim0⊙⊙∘|+1) # duplicate data for ordering alg
-⍥(
-  ⊢⊚=/↥♭.×,,
-  ⊃(
-    -Energy ⊙∘     # subtract energy
-  | ⍜⊡⋅0 ⊙⋅∘       # remove from initial binary pattern
-  | ⍜⊡⋅∘ ⊙⋅⋅⊙⟜(-1) # update indices
-  )
-)
-⋅⋅⊙°0 # indices, energy, binary pattern, next index
-# phase 2 - fill voids until 50% full
-&p"Phase 2"
-⊃(⋅⋅⋅∘|⋅∘|⋅⋅⨬(1|∞)|⊙⋅⋅∘) # reorder stack, invert bp
--:⌊÷2/×Dim
-⍥(
-  ⊢⊚=/↧♭.×,,
-  ⊃(
-    +Energy ⊙∘
-  | ⍜⊡⋅∞ ⊙⋅∘
-  | ⍜⊡⋅∘ ⊙⋅⋅⊙⟜(+1)
-  )
-)
-# phase 3 - fill all cluster of 0s
-&p"Phase 3"
-=1◌
-∧(+Energy):↯Dim0⊚. # rebuild energy map
-+1-:/×Dim⊃⋅⋅⋅∘⊙⊙⊙∘
-⍥(
-  ⊢⊚=/↥♭.×,,
-  ⊃(
-    -Energy ⊙∘
-  | ⍜⊡⋅0 ⊙⋅∘
-  | ⍜⊡⋅∘ ⊙⋅⋅⊙⟜(+1)
-  )
-)
-⋅⋅⊙(°1-/×Dim)
-÷/×Dim-1
+# ? binary pattern, energy map
 
-&p"Writing"
-&fwa $"./_x_.png"°⊟Dim img "png"
+# Phase 1 - make dither array (ordered binary pattern)
+⧻⊸⊚
+⊃(
+  ⋅⊙∘
+| ⋅⋅⊙°0 ⍥(
+    Argmax ◡×
+    ⊃(
+      ⍜⊡⋅0           # remove the tightest cluster
+    | -Energy ⊙⋅∘    # subtract energy
+    | ⍜⊡⋅∘ ⊙⋅⋅⊙⟜(-1) # update indices
+    )
+  ) ⤚⊙⊙⊙(↯Dim0)
+| +1
+)
+# ? binary pattern, energy map, dither array, index
+
+# Phase 2 - fill voids until 50% full
+-⊙(⌊÷2N) ⧻⊸⊚ # iteration count
+⍜⊙(÷⊙1¬)⍥(
+  Argmin ◡×
+  ⊃(⍜⊡⋅∞|+Energy ⊙⋅∘|⍜⊡⋅∘ ⊙⋅⋅⊙⟜(+1))
+)
+# ? binary pattern, energy map, dither array, index
+
+# Phase 3 -  fill all clusters of zeroes
+⊃(
+  -⊙N⧻⊚     # iteration count
+| ⟜EMap⊙◌ ¬ # flip binary pattern
+)
+
+⋅⋅⊙(°1= +1N) ⍥(
+  Argmax ◡×
+  ⊃(⍜⊡⋅0|-Energy ⊙⋅∘|⍜⊡⋅∘ ⊙⋅⋅⊙⟜(+1))
+)
+÷N-1
