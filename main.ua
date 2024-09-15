@@ -34,9 +34,9 @@ FormatTime ← (
   <Initial↯Dim[◌⍥genN Seed]
   ⊃(∘|÷⊙1¬|EMap)
   ⊙◌⍥(
-    ◡(Argmax ×⊙◌)
+    ◡(Argmax ×⊙⋅∘)
     ⊃(⍜⊡⋅0|⍜⊡⋅1 ⊙⋅∘|-Energy ⊙⋅⋅∘)
-    ◡(Argmin ×⋅∘)
+    ◡(Argmin ×⋅⊙∘)
     ⊃(⍜⊡⋅1|⍜⊡⋅∞ ⊙⋅∘|+Energy ⊙⋅⋅∘)
   )∞
 )
